@@ -1,4 +1,4 @@
-package com.example.pipemate.github.res;
+package com.example.pipemate.workflow.res;
 
 import lombok.Data;
 

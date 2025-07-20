@@ -1,6 +1,6 @@
-package com.example.pipemate.github;
+package com.example.pipemate.workflow;
 
-import com.example.pipemate.github.res.*;
+import com.example.pipemate.workflow.res.*;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

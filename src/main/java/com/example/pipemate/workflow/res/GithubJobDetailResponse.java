@@ -1,4 +1,4 @@
-package com.example.pipemate.github.res;
+package com.example.pipemate.workflow.res;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;

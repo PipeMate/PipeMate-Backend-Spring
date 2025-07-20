@@ -1,6 +1,6 @@
-package com.example.pipemate.github.res;
+package com.example.pipemate.workflow.res;
 
-import com.example.pipemate.github.WorkflowItem;
+import com.example.pipemate.workflow.WorkflowItem;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 

@@ -1,4 +1,4 @@
-package com.example.pipemate.github;
+package com.example.pipemate.workflow;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
