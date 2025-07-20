@@ -1,0 +1,17 @@
+package com.example.pipemate.secret.req;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class GithubSecretRequest {
+    @JsonProperty("value")
+    private String value;
+
+    @JsonProperty("key_id")
+    private String keyId;
+}
