@@ -36,24 +36,24 @@ public class GitHubSecretsController {
         return ResponseEntity.ok(response);
     }
 
-//    @PutMapping("/secrets")
-//    @Operation(summary = "레포지토리 시크릿 생성 또는 수정",
-//            description = "레포지토리에 새로운 시크릿을 생성하거나 기존 시크릿을 업데이트합니다.")
-//    public ResponseEntity<Void> createOrUpdateSecret(
-//            @RequestParam String owner,
-//            @RequestParam String repo,
-//            @RequestParam String secretName,
-//            @RequestBody GithubSecretRequest secretRequest,
-//            HttpServletRequest request
-//    ) {
-//        String token = request.getHeader("Authorization");
-//        if (token == null || !token.startsWith("Bearer ")) {
-//            throw new IllegalArgumentException("Authorization header must be provided in 'Bearer ghp_xxx' format");
-//        }
-//        String cleanToken = token.substring("Bearer ".length()).trim();
-//        secretsService.createOrUpdateSecret(owner, repo, secretName, secretRequest, cleanToken);
-//        return ResponseEntity.status(201).build();
-//    }
+    @PutMapping("/secrets")
+    @Operation(summary = "레포지토리 시크릿 생성 또는 수정",
+            description = "레포지토리에 새로운 시크릿을 생성하거나 기존 시크릿을 업데이트합니다.")
+    public ResponseEntity<Void> createOrUpdateSecret(
+            @RequestParam String owner,
+            @RequestParam String repo,
+            @RequestParam String secretName,
+            @RequestBody GithubSecretRequest secretRequest,
+            HttpServletRequest request
+    ) {
+        String token = request.getHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Authorization header must be provided in 'Bearer ghp_xxx' format");
+        }
+        String cleanToken = token.substring("Bearer ".length()).trim();
+        secretsService.createOrUpdateSecret(owner, repo, secretName, secretRequest, cleanToken);
+        return ResponseEntity.status(201).build();
+    }
 
     @GetMapping("/secrets/public-key")
     @Operation(summary = "레포지토리 퍼블릭 키 조회",
@@ -72,5 +72,24 @@ public class GitHubSecretsController {
         GithubPublicKeyResponse response = secretsService.getPublicKey(owner, repo, cleanToken);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/secrets")
+    @Operation(summary = "레포지토리 시크릿 삭제", description = "지정한 시크릿 이름의 레포지토리 시크릿을 삭제합니다.")
+    public ResponseEntity<Void> deleteSecret(
+            @RequestParam String owner,
+            @RequestParam String repo,
+            @RequestParam String secretName,
+            HttpServletRequest request
+    ) {
+        String token = request.getHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Authorization header must be provided in 'Bearer ghp_xxx' format");
+        }
+
+        String cleanToken = token.substring("Bearer ".length()).trim();
+        secretsService.deleteSecret(owner, repo, secretName, cleanToken);
+        return ResponseEntity.noContent().build(); // 204
+    }
+
 
 }

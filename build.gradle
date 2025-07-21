@@ -9,7 +9,7 @@ version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -46,8 +46,7 @@ dependencies {
     implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.0.3'
 
     implementation 'com.goterl:lazysodium-java:5.1.1'       // Java 바인딩
-    runtimeOnly 'org.libsodium:libsodium-jni:1.0.18'         // Native JNI 라이브러리
-    implementation 'org.abstractj.kalium:kalium:0.8.0' // tweetnacl-java 기반
+    implementation 'net.java.dev.jna:jna:5.8.0' // LazySodium 의존성
 
 
 }

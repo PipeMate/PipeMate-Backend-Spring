@@ -11,7 +11,4 @@ import lombok.NoArgsConstructor;
 public class GithubSecretRequest {
     @JsonProperty("value")
     private String value;
-
-    @JsonProperty("key_id")
-    private String keyId;
 }
