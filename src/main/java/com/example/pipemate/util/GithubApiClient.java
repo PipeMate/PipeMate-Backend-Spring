@@ -2,11 +2,10 @@ package com.example.pipemate.util;
 
 import com.example.pipemate.workflow.res.*;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -24,9 +23,11 @@ import java.util.zip.ZipInputStream;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class GithubApiClient {
 
     private final RestTemplate restTemplate;
+//    private final ObjectMapper objectMapper;
 
     public GithubApiClient() {
         this.restTemplate = new RestTemplate();
@@ -184,4 +185,99 @@ public class GithubApiClient {
         JsonNode jobNode = response.getBody();
         return GithubJobDetailResponse.from(jobNode);
     }
+
+//    public void createOrUpdateFile(String owner, String repo, String path, String content, String message, String token) {
+//        try {
+//            // 1. 기존 파일 존재 여부 확인
+//            String existingSha = null;
+//            try {
+//                String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, path);
+//                HttpHeaders headers = new HttpHeaders();
+//                headers.setBearerAuth(token);
+//                headers.setContentType(MediaType.APPLICATION_JSON);
+//
+//                HttpEntity<String> entity = new HttpEntity<>(headers);
+//                ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+//
+//                if (response.getStatusCode().is2xxSuccessful()) {
+//                    JsonNode responseNode = objectMapper.readTree(response.getBody());
+//                    existingSha = responseNode.path("sha").asText();
+//                    log.info("Found existing file with SHA: {}", existingSha);
+//                }
+//            } catch (Exception e) {
+//                log.info("File does not exist, will create new file: {}", path);
+//            }
+//
+//            // 2. 파일 생성/업데이트 요청 구성
+//            String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, path);
+//
+//            ObjectNode requestBody = objectMapper.createObjectNode();
+//            requestBody.put("message", message);
+//            requestBody.put("content", Base64.getEncoder().encodeToString(content.getBytes()));
+//
+//            if (existingSha != null) {
+//                requestBody.put("sha", existingSha);
+//            }
+//
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setBearerAuth(token);
+//            headers.setContentType(MediaType.APPLICATION_JSON);
+//
+//            HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
+//
+//            // 3. API 호출
+//            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+//
+//            if (response.getStatusCode().is2xxSuccessful()) {
+//                log.info("Successfully created/updated file: {}", path);
+//            } else {
+//                throw new RuntimeException("Failed to create/update file: " + response.getBody());
+//            }
+//
+//        } catch (Exception e) {
+//            log.error("Error creating/updating file in GitHub", e);
+//            throw new RuntimeException("Failed to create/update GitHub file: " + e.getMessage(), e);
+//        }
+//    }
+//
+//    public void deleteFile(String owner, String repo, String path, String message, String token) {
+//        try {
+//            // 1. 삭제할 파일의 SHA 가져오기
+//            String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, path);
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setBearerAuth(token);
+//
+//            HttpEntity<String> getEntity = new HttpEntity<>(headers);
+//            ResponseEntity<String> getResponse = restTemplate.exchange(url, HttpMethod.GET, getEntity, String.class);
+//
+//            if (!getResponse.getStatusCode().is2xxSuccessful()) {
+//                throw new RuntimeException("File not found: " + path);
+//            }
+//
+//            JsonNode responseNode = objectMapper.readTree(getResponse.getBody());
+//            String sha = responseNode.path("sha").asText();
+//
+//            // 2. 파일 삭제 요청
+//            ObjectNode requestBody = objectMapper.createObjectNode();
+//            requestBody.put("message", message);
+//            requestBody.put("sha", sha);
+//
+//            HttpHeaders deleteHeaders = new HttpHeaders();
+//            deleteHeaders.setBearerAuth(token);
+//            deleteHeaders.setContentType(MediaType.APPLICATION_JSON);
+//
+//            HttpEntity<String> deleteEntity = new HttpEntity<>(requestBody.toString(), deleteHeaders);
+//            ResponseEntity<String> deleteResponse = restTemplate.exchange(url, HttpMethod.DELETE, deleteEntity, String.class);
+//
+//            if (deleteResponse.getStatusCode().is2xxSuccessful()) {
+//                log.info("Successfully deleted file: {}", path);
+//            } else {
+//                throw new RuntimeException("Failed to delete file: " + deleteResponse.getBody());
+//            }
+//
+//        } catch (Exception e) {
+//            log.error("Error deleting file from GitHub", e);
+//            throw new RuntimeException("Failed to delete GitHub file: " + e.getMessage(), e);
+//        }
+//    }
 }
