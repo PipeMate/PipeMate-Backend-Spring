@@ -38,3 +38,4 @@ out/
 
 ### Service
 application.properties
+application.yml
