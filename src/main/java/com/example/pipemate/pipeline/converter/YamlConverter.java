@@ -27,8 +27,9 @@ public class YamlConverter {
             options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);     // 블록 형식 YAML
             options.setDefaultScalarStyle(DumperOptions.ScalarStyle.PLAIN); // 스칼라 스타일
             options.setLineBreak(DumperOptions.LineBreak.UNIX);             // \n 줄바꿈
-            options.setIndent(2);                                           // 2칸 들여쓰기
-            options.setIndicatorIndent(2);                                  // 인디케이터 들여쓰기
+            options.setIndent(2);                  // 들여쓰기 기본값
+            options.setIndicatorIndent(2);         // 하이픈 `-` 들여쓰기 위치
+            options.setIndentWithIndicator(true);  // 들여쓰기 시 리스트 하이픈 포함
 
             // YAML로 변환
             Yaml yaml = new Yaml(options);

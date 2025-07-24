@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
-import org.springframework.stereotype.Indexed;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,6 +12,7 @@ import java.util.Map;
 
 @Builder
 @Getter
+@Setter
 public class PipelineEntity {
     @Id
     private String id;

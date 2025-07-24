@@ -1,11 +1,15 @@
 package com.example.pipemate.pipeline.res;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+@Builder
+@Getter
 public class PipelineResponse {
     /**
      * MongoDB에 저장된 워크플로우 ID
