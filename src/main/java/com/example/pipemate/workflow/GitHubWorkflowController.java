@@ -19,8 +19,8 @@ public class GitHubWorkflowController {
     private final GitHubWorkflowService gitHubWorkflowService;
 
     @GetMapping("/workflows")
-    @Operation(summary = "특정 레포지토리의 워크플로우 목록 조회",
-            description = "레포지토리 소유자와 레포지토리 이름을 기반으로 워크플로우 목록을 조회합니다. ")
+    @Operation(summary = "특정 레포지토리의 워크플로우(yml 파일) 목록 조회",
+            description = "레포지토리 소유자와 레포지토리 이름을 기반으로 워크플로우(yml 파일) 목록을 조회합니다.")
     public ResponseEntity<WorkflowListResponse> getWorkflows(
             @RequestParam String owner,
             @RequestParam String repo,
@@ -44,8 +44,8 @@ public class GitHubWorkflowController {
     }
 
     @GetMapping("/workflows/{workflowId}")
-    @Operation(summary = "특정 워크플로우 상세 정보 조회",
-            description = "워크플로우 ID를 기반으로 워크플로우의 상세 정보를 조회합니다.")
+    @Operation(summary = "특정 워크플로우(yml 파일) 상세 정보 조회",
+            description = "워크플로우 ID를 기반으로 워크플로우의(yml 파일) 상세 정보를 조회합니다.")
     public ResponseEntity<WorkflowDetailResponse> getWorkflowDetail(
             @RequestParam String owner,
             @RequestParam String repo,
@@ -62,7 +62,7 @@ public class GitHubWorkflowController {
     }
 
     @GetMapping("/workflow-runs")
-    @Operation(summary = "특정 레포지토리의 워크플로우 실행 목록 조회")
+    @Operation(summary = "특정 레포지토리의 최근 워크플로우(yml 파일) 실행 목록 조회(기본값, 내림 차순으로 30개). 추후 페이지네이션 도입 예정", description = "워크플로우 실행 ID(run Id)가 포함되어 있습니다.")
     public ResponseEntity<WorkflowRunListResponse> getWorkflowRuns(
             @RequestParam String owner,
             @RequestParam String repo,
@@ -79,7 +79,7 @@ public class GitHubWorkflowController {
     }
 
     @GetMapping("/workflow-run")
-    @Operation(summary = "특정 워크플로우 실행 상세 정보 조회")
+    @Operation(summary = "특정 워크플로우(yml 파일) 실행 상세 정보 조회", description = "워크플로우 실행 정보에 대한 식별값으로 runId를 사용합니다.")
     public ResponseEntity<WorkflowRunResponse> getWorkflowRun(
             @RequestParam String owner,
             @RequestParam String repo,
@@ -99,7 +99,7 @@ public class GitHubWorkflowController {
 
     @GetMapping("/workflow-run/logs/raw")
     @Operation(summary = "특정 워크플로우 실행 로그 텍스트 반환",
-            description = "실행 ID를 통해 압축된 로그를 다운로드하고 압축을 해제해 텍스트 형태로 반환합니다.")
+            description = "실행(run) ID를 통해 해당 워크플로우 실행 시 기록된 로그의 압축 파일을 다운로드하고 압축을 해제해 텍스트 형태로 반환합니다.")
     public ResponseEntity<String> getWorkflowRunLogsText(
             @RequestParam String owner,
             @RequestParam String repo,
@@ -118,7 +118,7 @@ public class GitHubWorkflowController {
 
     @GetMapping("/workflow-run/jobs")
     @Operation(summary = "특정 워크플로우 실행 내 모든 Job 상세 정보 조회",
-            description = "runId를 기준으로 모든 Job 상세 정보 (status, steps 등)를 반환합니다.")
+            description = "runId를 기준으로 모든 Job 상세 정보 (job id, status, steps 등)를 반환합니다. ")
     public ResponseEntity<List<GithubJobDetailResponse>> getJobsForWorkflowRun(
             @RequestParam String owner,
             @RequestParam String repo,
@@ -135,8 +135,8 @@ public class GitHubWorkflowController {
     }
 
     @GetMapping("/workflow-run/job")
-    @Operation(summary = "특정 워크플로우 Job 상세 정보 조회",
-            description = "jobId를 기준으로 해당 Job의 상태, conclusion, steps 등의 상세 정보를 조회합니다.")
+    @Operation(summary = "특정 워크플로 실행의 특정 Job 상세 정보 조회(이때 runId 없이 jobId 만으로 조회)",
+            description = "jobId를 기준으로 해당 Job의 상태, job id, conclusion, steps 등의 상세 정보를 조회합니다.")
     public ResponseEntity<GithubJobDetailResponse> getJobDetail(
             @RequestParam String owner,
             @RequestParam String repo,
