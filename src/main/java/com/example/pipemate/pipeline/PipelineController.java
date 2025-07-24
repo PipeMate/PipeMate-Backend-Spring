@@ -78,7 +78,7 @@ public class PipelineController {
 
     @DeleteMapping("/{ymlFileName}")
     @Operation(summary = "저장된 특정 파이프라인(워크플로우) 삭제",
-            description = "MongoDB에서 해당 이름의 파이프라인(워크플로우)를 삭제합니다.")
+            description = "깃허브에 저장된 특정 파이프라인(워크플로우)를 삭제합니다.")
     public ResponseEntity<Void> deleteStoredWorkflow(
             @PathVariable String ymlFileName,
             @RequestParam String owner,
