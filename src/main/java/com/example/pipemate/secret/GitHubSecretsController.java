@@ -9,8 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/github/repos")
 @RequiredArgsConstructor
@@ -20,7 +18,7 @@ public class GitHubSecretsController {
 
     @GetMapping("/secrets")
     @Operation(summary = "레포지토리 시크릿 목록 조회",
-            description = "GitHub 레포지토리 내 등록된 모든 시크릿 목록을 반환합니다.")
+            description = "해당 레포지토리 내 등록된 모든 시크릿 목록을 반환합니다.")
     public ResponseEntity<GithubSecretListResponse> getRepositorySecrets(
             @RequestParam String owner,
             @RequestParam String repo,
@@ -55,7 +53,7 @@ public class GitHubSecretsController {
         return ResponseEntity.status(201).build();
     }
 
-    @GetMapping("/secrets/public-key")
+//    @GetMapping("/secrets/public-key")
     @Operation(summary = "레포지토리 퍼블릭 키 조회",
             description = "GitHub 레포지토리의 시크릿 암호화를 위한 퍼블릭 키를 조회합니다.")
     public ResponseEntity<GithubPublicKeyResponse> getPublicKey(

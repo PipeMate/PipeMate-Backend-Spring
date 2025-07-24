@@ -5,21 +5,20 @@ import com.example.pipemate.pipeline.converter.YamlConverter;
 import com.example.pipemate.pipeline.req.PipelineRequest;
 import com.example.pipemate.pipeline.res.PipelineResponse;
 import com.example.pipemate.util.GithubApiClient;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class PipelineService {
 
-    private final PipelineRepository pipelineRepository;
     private final GithubApiClient githubApiClient;
     private final JsonWorkflowConverter jsonWorkflowConverter;
     private final YamlConverter yamlConverter;
@@ -36,7 +35,7 @@ public class PipelineService {
 
             // 3. GitHub에 YAML 파일 업로드
             String filePath = ".github/workflows/" + request.getWorkflowName() + ".yml";
-            githubApiClient.createOrUpdateFile(
+            githubApiClient.createFile(
                     request.getOwner(),
                     request.getRepo(),
                     filePath,
@@ -45,40 +44,46 @@ public class PipelineService {
                     token
             );
 
-            log.info("Github workflow 폴더에 성공적으로 워크플로우 yml 파일을 저장했습니다. Workflow uploaded to GitHub at path: {}", filePath);
+            log.info("Workflow uploaded to GitHub at path: {}", filePath);
 
         } catch (Exception e) {
             log.error("Error during workflow conversion process", e);
-            throw new RuntimeException("Failed to convert and save workflow: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to convert and upload workflow: " + e.getMessage(), e);
         }
     }
 
-    public PipelineResponse getStoredWorkflow(String workflowId) {
-        PipelineEntity entity = pipelineRepository.findById(workflowId)
-                .orElseThrow(() -> new RuntimeException("Workflow not found with ID: " + workflowId));
+    public PipelineResponse getWorkflowFromGitHub(String owner, String repo, String workflowName, String token) {
+        try {
+            String path = ".github/workflows/" + workflowName + ".yml";
 
-        return PipelineResponse.builder()
-                .workflowId(entity.getId())
-                .owner(entity.getOwner())
-                .repo(entity.getRepo())
-                .workflowName(entity.getWorkflowName())
-                .originalJson(entity.getOriginalJson())
-                .convertedJson(entity.getConvertedJson())
-                .yamlContent(entity.getYamlContent())
-                .githubPath(".github/workflows/" + entity.getWorkflowName() + ".yml")
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .success(true)
-                .message("Workflow retrieved successfully")
-                .build();
+            // 1. GitHub에서 YML 가져오기
+            String yamlContent = githubApiClient.getFileContent(owner, repo, path, token);
+
+            // 2. YAML → 일반 JSON Map
+            Map<String, Object> convertedJson = yamlConverter.convertYamlToJson(yamlContent);
+
+            // 3. 일반 JSON → 블록 기반 JSON
+            List<JsonNode> originalJson = jsonWorkflowConverter.convertWorkflowJsonToBlocks(convertedJson);
+
+            // 4. 응답 생성
+            return PipelineResponse.builder()
+                    .owner(owner)
+                    .repo(repo)
+                    .workflowName(workflowName)
+                    .originalJson(originalJson)          // 이제 블록기반 JSON 포함
+                    .githubPath(path)
+                    .success(true)
+                    .message("Workflow loaded and parsed from GitHub")
+                    .build();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load workflow from GitHub: " + e.getMessage(), e);
+        }
     }
 
-    public PipelineResponse updateStoredWorkflow(String workflowId, PipelineRequest request, String token) {
+    public PipelineResponse updateWorkflowOnGitHub(PipelineRequest request, String token) {
         try {
-            PipelineEntity existingEntity = pipelineRepository.findById(workflowId)
-                    .orElseThrow(() -> new RuntimeException("Workflow not found with ID: " + workflowId));
-
-            log.info("Updating workflow: {} for {}/{}", workflowId, request.getOwner(), request.getRepo());
+            log.info("Updating GitHub workflow for {}/{}", request.getOwner(), request.getRepo());
 
             // 1. JSON 변환
             Map<String, Object> convertedJson = jsonWorkflowConverter.convertToWorkflowJson(request.getInputJson());
@@ -86,18 +91,10 @@ public class PipelineService {
             // 2. YAML 변환
             String yamlContent = yamlConverter.convertJsonToYaml(convertedJson);
 
-            // 3. MongoDB 업데이트
-            existingEntity.setWorkflowName(request.getWorkflowName());
-            existingEntity.setOriginalJson(request.getInputJson());
-            existingEntity.setConvertedJson(convertedJson);
-            existingEntity.setYamlContent(yamlContent);
-            existingEntity.setUpdatedAt(LocalDateTime.now());
-
-            PipelineEntity updatedEntity = pipelineRepository.save(existingEntity);
-
-            // 4. GitHub 업데이트
+            // 3. GitHub에 업로드 (덮어쓰기)
+            // workflowName 와 ymlFileName 은 같은 의미이다.
             String filePath = ".github/workflows/" + request.getWorkflowName() + ".yml";
-            githubApiClient.createOrUpdateFile(
+            githubApiClient.updateFile(
                     request.getOwner(),
                     request.getRepo(),
                     filePath,
@@ -106,21 +103,19 @@ public class PipelineService {
                     token
             );
 
-            log.info("Workflow updated and re-uploaded to GitHub");
+            log.info("Workflow updated and uploaded to GitHub at {}", filePath);
 
             return PipelineResponse.builder()
-                    .workflowId(updatedEntity.getId())
+                    .workflowId(null)  // DB 사용 안 하므로 null
                     .owner(request.getOwner())
                     .repo(request.getRepo())
                     .workflowName(request.getWorkflowName())
                     .originalJson(request.getInputJson())
-                    .convertedJson(convertedJson)
-                    .yamlContent(yamlContent)
                     .githubPath(filePath)
-                    .createdAt(updatedEntity.getCreatedAt())
-                    .updatedAt(updatedEntity.getUpdatedAt())
+                    .createdAt(null)
+                    .updatedAt(LocalDateTime.now())
                     .success(true)
-                    .message("Workflow successfully updated in MongoDB and GitHub")
+                    .message("Workflow successfully updated on GitHub")
                     .build();
 
         } catch (Exception e) {
@@ -129,24 +124,17 @@ public class PipelineService {
         }
     }
 
-    public void deleteStoredWorkflow(String workflowId, String owner, String repo, String token) {
+    public void deleteWorkflowFromGitHub(String ymlFileName, String owner, String repo, String token) {
         try {
-            PipelineEntity entity = pipelineRepository.findById(workflowId)
-                    .orElseThrow(() -> new RuntimeException("Workflow not found with ID: " + workflowId));
+            // GitHub에서 파일 삭제
+            String filePath = ".github/workflows/" + ymlFileName + ".yml";
+            githubApiClient.deleteFile(owner, repo, filePath, "Delete workflow: " + ymlFileName, token);
 
-            // 1. GitHub에서 파일 삭제
-            String filePath = ".github/workflows/" + entity.getWorkflowName() + ".yml";
-            githubApiClient.deleteFile(owner, repo, filePath, "Delete workflow: " + entity.getWorkflowName(), token);
-
-            // 2. MongoDB에서 삭제
-            pipelineRepository.deleteById(workflowId);  // 🔧 수정된 부분
-
-            log.info("Workflow deleted from both MongoDB and GitHub: {}", workflowId);
+            log.info("Workflow deleted from GitHub: {}", filePath);
 
         } catch (Exception e) {
-            log.error("Error during workflow deletion process", e);
-            throw new RuntimeException("Failed to delete workflow: " + e.getMessage(), e);
+            log.error("Error during GitHub workflow deletion process", e);
+            throw new RuntimeException("Failed to delete workflow from GitHub: " + e.getMessage(), e);
         }
     }
-
 }
