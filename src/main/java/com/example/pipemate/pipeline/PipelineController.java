@@ -19,7 +19,7 @@ public class PipelineController {
 
     @PostMapping
     @Operation(summary = "파이프라인(워크플로우) 블록 리스트를 받아서 YML 파일로 변환 후 깃허브에 업로드(생성)",
-            description = "해당 이름의 파이프라인(워크플로우)가 GitHub에 존재하는 경우 에러를 발생시킵니다.")
+            description = "*해당 이름의 파이프라인(워크플로우)가 GitHub에 존재하는 경우 에러를 발생시킵니다.")
     public ResponseEntity<String> convertAndSaveWorkflow(
             @RequestBody PipelineRequest request,
             HttpServletRequest httpRequest
@@ -57,7 +57,7 @@ public class PipelineController {
 
     @PutMapping
     @Operation(summary = "깃허브에 저장된 특정 파이프라인(워크플로우) 업데이트",
-            description = "변경하고자 하는 이름의 파이프라인(워크플로우)이 GitHub에 존재하는 경우 에러를 발생시킵니다.")
+            description = "*변경하고자 하는 이름의 파이프라인(워크플로우)이 GitHub에 존재하는 경우 에러를 발생시킵니다.")
     public ResponseEntity<PipelineResponse> updateStoredWorkflow(
             @RequestBody PipelineRequest request,
             HttpServletRequest httpRequest
