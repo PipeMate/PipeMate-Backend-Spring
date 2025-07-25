@@ -435,4 +435,38 @@ public class GithubApiClient {
             throw new RuntimeException("SHA 조회 실패: " + e.getMessage(), e);
         }
     }
+
+    public void dispatchWorkflow(String owner, String repo, String ymlFileName, String ref, String token) {
+        String url = "https://api.github.com/repos/" + owner + "/" + repo + "/actions/workflows/" + ymlFileName + "/dispatches";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+        headers.set("Accept", "application/vnd.github+json");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("ref", ref); // 필수: 실행할 브랜치 이름 (예: "main")
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+        restTemplate.postForEntity(url, entity, Void.class);
+    }
+
+    public void cancelWorkflowRun(String owner, String repo, Long runId, String token) {
+        String url = String.format("https://api.github.com/repos/%s/%s/actions/runs/%d/cancel", owner, repo, runId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+        headers.set("Accept", "application/vnd.github+json");
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        try {
+            restTemplate.postForEntity(url, entity, String.class);
+            log.info("Successfully sent cancel request to: {}", url);
+        } catch (HttpClientErrorException e) {
+            log.error("Failed to cancel workflow run: {}", e.getResponseBodyAsString());
+            throw e;
+        }
+    }
 }

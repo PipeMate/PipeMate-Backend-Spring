@@ -40,6 +40,14 @@ public class GitHubWorkflowService {
     public GithubJobDetailResponse getWorkflowJobDetail(String owner, String repo, Long jobId, String token) {
         return githubApiClient.fetchWorkflowJobDetail(owner, repo, jobId, token);
     }
+
+    public void dispatchWorkflow(String owner, String repo, String ymlFileName, String ref, String token) {
+        githubApiClient.dispatchWorkflow(owner, repo, ymlFileName, ref, token);
+    }
+
+    public void cancelWorkflowRun(String owner, String repo, Long runId, String token) {
+        githubApiClient.cancelWorkflowRun(owner, repo, runId, token);
+    }
 }
 
 
