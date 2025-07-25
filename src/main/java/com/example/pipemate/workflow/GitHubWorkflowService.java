@@ -1,7 +1,7 @@
 package com.example.pipemate.workflow;
 
-import com.example.pipemate.workflow.res.*;
 import com.example.pipemate.util.GithubApiClient;
+import com.example.pipemate.workflow.res.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
