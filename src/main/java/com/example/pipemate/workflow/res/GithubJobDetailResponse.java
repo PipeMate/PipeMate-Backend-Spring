@@ -18,15 +18,6 @@ public class GithubJobDetailResponse {
     private String conclusion;
     private List<Step> steps;
 
-    @Data
-    public static class Step {
-        private String name;
-        private String status;
-        private String conclusion;
-        private String startedAt;
-        private String completedAt;
-    }
-
     public static GithubJobDetailResponse from(JsonNode jobNode) {
         GithubJobDetailResponse response = new GithubJobDetailResponse();
         response.setId(jobNode.get("id").asLong());
@@ -49,5 +40,14 @@ public class GithubJobDetailResponse {
         }
         response.setSteps(steps);
         return response;
+    }
+
+    @Data
+    public static class Step {
+        private String name;
+        private String status;
+        private String conclusion;
+        private String startedAt;
+        private String completedAt;
     }
 }

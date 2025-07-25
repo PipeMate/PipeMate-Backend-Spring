@@ -1,5 +1,6 @@
 package com.example.pipemate.util;
 
+import com.example.pipemate.workflow.WorkflowItem;
 import com.example.pipemate.workflow.res.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,6 +11,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -18,10 +20,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -39,20 +39,71 @@ public class GithubApiClient {
     }
 
     public WorkflowListResponse fetchWorkflowList(String owner, String repo, String token) {
-        String url = "https://api.github.com/repos/" + owner + "/" + repo + "/actions/workflows";
+        String listUrl = "https://api.github.com/repos/" + owner + "/" + repo + "/actions/workflows";
 
         HttpHeaders headers = new HttpHeaders();
-        System.out.println("token = " + token);
         headers.set("Authorization", "Bearer " + token);
         headers.set("Accept", "application/vnd.github+json");
-        headers.set("X-GitHub-Api-Version", "2022-11-28");
 
         HttpEntity<Void> entity = new HttpEntity<>(headers);
-        ResponseEntity<WorkflowListResponse> response = restTemplate.exchange(
-                url, HttpMethod.GET, entity, WorkflowListResponse.class
-        );
+        ResponseEntity<JsonNode> response = restTemplate.exchange(listUrl, HttpMethod.GET, entity, JsonNode.class);
 
-        return response.getBody();
+        int totalCount = response.getBody().get("total_count").asInt();
+        List<WorkflowItem> workflowItems = new ArrayList<>();
+
+        for (JsonNode workflow : response.getBody().get("workflows")) {
+            WorkflowItem item = new WorkflowItem();
+            item.setId(workflow.get("id").asLong());
+            item.setName(workflow.get("name").asText());
+            item.setPath(workflow.get("path").asText());
+            item.setState(workflow.get("state").asText());
+            item.setCreatedAt(workflow.get("created_at").asText());
+            item.setUpdatedAt(workflow.get("updated_at").asText());
+            item.setUrl(workflow.get("url").asText());
+            item.setHtmlUrl(workflow.get("html_url").asText());
+            item.setBadgeUrl(workflow.get("badge_url").asText());
+
+            // .yml 파일 내용 파싱
+            String fileUrl = "https://api.github.com/repos/" + owner + "/" + repo + "/contents/" + item.getPath();
+            ResponseEntity<JsonNode> fileResponse = restTemplate.exchange(fileUrl, HttpMethod.GET, entity, JsonNode.class);
+            String encoded = fileResponse.getBody().get("content").asText();
+            String cleaned = encoded.replaceAll("\\s+", "");
+            String decodedYaml = new String(Base64.getDecoder().decode(cleaned), StandardCharsets.UTF_8);
+
+            item.setManualDispatchEnabled(decodedYaml.contains("workflow_dispatch"));
+            item.setAvailableBranches(parseBranches(decodedYaml));
+
+            workflowItems.add(item);
+        }
+
+        WorkflowListResponse result = new WorkflowListResponse();
+        result.setTotalCount(totalCount);
+        result.setWorkflows(workflowItems);
+        return result;
+    }
+
+    private List<String> parseBranches(String yamlText) {
+        try {
+            Yaml yaml = new Yaml();
+            Map<String, Object> parsed = yaml.load(yamlText);
+            Object on = parsed.get("on");
+
+            if (on instanceof Map) {
+                Map<?, ?> onMap = (Map<?, ?>) on;
+                Object push = onMap.get("push");
+
+                if (push instanceof Map) {
+                    Object branches = ((Map<?, ?>) push).get("branches");
+
+                    if (branches instanceof List<?>) {
+                        return ((List<?>) branches).stream().map(Object::toString).collect(Collectors.toList());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("브랜치 파싱 실패: {}", e.getMessage());
+        }
+        return new ArrayList<>();
     }
 
     public WorkflowDetailResponse fetchWorkflowDetail(String owner, String repo, String workflowId, String token) {
@@ -382,6 +433,40 @@ public class GithubApiClient {
         } catch (Exception e) {
             log.error("SHA 조회 중 오류 발생", e);
             throw new RuntimeException("SHA 조회 실패: " + e.getMessage(), e);
+        }
+    }
+
+    public void dispatchWorkflow(String owner, String repo, String ymlFileName, String ref, String token) {
+        String url = "https://api.github.com/repos/" + owner + "/" + repo + "/actions/workflows/" + ymlFileName + "/dispatches";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+        headers.set("Accept", "application/vnd.github+json");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("ref", ref); // 필수: 실행할 브랜치 이름 (예: "main")
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+        restTemplate.postForEntity(url, entity, Void.class);
+    }
+
+    public void cancelWorkflowRun(String owner, String repo, Long runId, String token) {
+        String url = String.format("https://api.github.com/repos/%s/%s/actions/runs/%d/cancel", owner, repo, runId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+        headers.set("Accept", "application/vnd.github+json");
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        try {
+            restTemplate.postForEntity(url, entity, String.class);
+            log.info("Successfully sent cancel request to: {}", url);
+        } catch (HttpClientErrorException e) {
+            log.error("Failed to cancel workflow run: {}", e.getResponseBodyAsString());
+            throw e;
         }
     }
 }

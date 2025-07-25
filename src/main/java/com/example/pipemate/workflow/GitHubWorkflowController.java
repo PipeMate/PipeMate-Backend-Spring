@@ -151,6 +151,43 @@ public class GitHubWorkflowController {
         GithubJobDetailResponse jobDetail = gitHubWorkflowService.getWorkflowJobDetail(owner, repo, jobId, cleanToken);
         return ResponseEntity.ok(jobDetail);
     }
+
+    @PostMapping("/workflows/dispatch")
+    @Operation(summary = "GitHub 워크플로우 수동 실행", description = "특정 레포지토리의 워크플로우를 수동으로 실행합니다. *ymlFileName은 확장자까지 입력해야 하며, ref는 브랜치 이름을 의미합니다.")
+    public ResponseEntity<String> triggerWorkflowDispatch(
+            @RequestParam String owner,
+            @RequestParam String repo,
+            @RequestParam String ymlFileName,  // 예: main.yml
+            @RequestParam String ref,           // 예: main, dev 등
+            HttpServletRequest request
+    ) {
+        String token = request.getHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Authorization header must be provided in 'Bearer <token>' format");
+        }
+
+        String cleanToken = token.substring("Bearer ".length()).trim();
+        gitHubWorkflowService.dispatchWorkflow(owner, repo, ymlFileName, ref, cleanToken);
+        return ResponseEntity.ok("Workflow dispatched successfully");
+    }
+
+    @PostMapping("/workflow-run/cancel")
+    @Operation(summary = "실행 중인 워크플로우 실행 취소", description = "runId를 통해 실행 중인 워크플로우를 취소합니다. *최근 워크플로우 실행 목록 조회 API를 통해 현재 동작중인 runId를 확인할 수 있습니다.")
+    public ResponseEntity<String> cancelWorkflowRun(
+            @RequestParam String owner,
+            @RequestParam String repo,
+            @RequestParam Long runId,
+            HttpServletRequest request
+    ) {
+        String token = request.getHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Authorization header must be provided in 'Bearer ghp_xxx' format");
+        }
+
+        String cleanToken = token.substring("Bearer ".length()).trim();
+        gitHubWorkflowService.cancelWorkflowRun(owner, repo, runId, cleanToken);
+        return ResponseEntity.ok("Workflow run canceled (if in progress)");
+    }
 }
 
 
