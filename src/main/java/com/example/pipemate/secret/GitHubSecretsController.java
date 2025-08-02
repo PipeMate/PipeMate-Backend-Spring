@@ -2,7 +2,7 @@ package com.example.pipemate.secret;
 
 import com.example.pipemate.secret.req.GithubSecretRequest;
 import com.example.pipemate.secret.res.GithubPublicKeyResponse;
-import com.example.pipemate.secret.res.GithubSecretListResponse;
+import com.example.pipemate.secret.res.GroupedGithubSecretListResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +17,9 @@ public class GitHubSecretsController {
     private final GitHubSecretsService secretsService;
 
     @GetMapping("/secrets")
-    @Operation(summary = "레포지토리 시크릿 목록 조회",
-            description = "해당 레포지토리 내 등록된 모든 시크릿 목록을 반환합니다.")
-    public ResponseEntity<GithubSecretListResponse> getRepositorySecrets(
+    @Operation(summary = "레포지토리의 도메인별 시크릿 목록 조회",
+            description = "도메인 접두어를 기준으로 그룹화된 시크릿 목록을 반환합니다.")
+    public ResponseEntity<GroupedGithubSecretListResponse> getGroupedRepositorySecrets(
             @RequestParam String owner,
             @RequestParam String repo,
             HttpServletRequest request
@@ -30,7 +30,7 @@ public class GitHubSecretsController {
         }
 
         String cleanToken = token.substring("Bearer ".length()).trim();
-        GithubSecretListResponse response = secretsService.getRepositorySecrets(owner, repo, cleanToken);
+        GroupedGithubSecretListResponse response = secretsService.getGroupedRepositorySecrets(owner, repo, cleanToken);
         return ResponseEntity.ok(response);
     }
 
@@ -53,7 +53,7 @@ public class GitHubSecretsController {
         return ResponseEntity.status(201).build();
     }
 
-//    @GetMapping("/secrets/public-key")
+    //    @GetMapping("/secrets/public-key")
     @Operation(summary = "레포지토리 퍼블릭 키 조회",
             description = "GitHub 레포지토리의 시크릿 암호화를 위한 퍼블릭 키를 조회합니다.")
     public ResponseEntity<GithubPublicKeyResponse> getPublicKey(

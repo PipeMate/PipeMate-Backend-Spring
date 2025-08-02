@@ -3,6 +3,7 @@ package com.example.pipemate.secret;
 import com.example.pipemate.secret.req.GithubSecretRequest;
 import com.example.pipemate.secret.res.GithubPublicKeyResponse;
 import com.example.pipemate.secret.res.GithubSecretListResponse;
+import com.example.pipemate.secret.res.GroupedGithubSecretListResponse;
 import com.goterl.lazysodium.LazySodiumJava;
 import com.goterl.lazysodium.SodiumJava;
 import com.goterl.lazysodium.interfaces.Box;
@@ -40,6 +41,23 @@ public class GitHubSecretsService {
         );
 
         return response.getBody();
+    }
+
+    public GroupedGithubSecretListResponse getGroupedRepositorySecrets(String owner, String repo, String token) {
+        GithubSecretListResponse original = getRepositorySecrets(owner, repo, token); // 기존 로직 그대로 호출
+
+        Map<String, List<GithubSecretListResponse.SecretItem>> grouped = new HashMap<>();
+
+        for (GithubSecretListResponse.SecretItem item : original.getSecrets()) {
+            String name = item.getName();
+            String domain = name.contains("_") ? name.split("_")[0] : "UNKNOWN";
+
+            grouped.computeIfAbsent(domain, k -> new ArrayList<>()).add(item);
+        }
+
+        GroupedGithubSecretListResponse response = new GroupedGithubSecretListResponse();
+        response.setGroupedSecrets(grouped);
+        return response;
     }
 
     public void createOrUpdateSecret(String owner, String repo, String secretName, GithubSecretRequest request, String token) {
