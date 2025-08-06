@@ -67,8 +67,6 @@ public class PipelineService {
 
             // 4. 응답 생성
             return PipelineResponse.builder()
-                    .owner(owner)
-                    .repo(repo)
                     .workflowName(workflowName)
                     .originalJson(originalJson)          // 이제 블록기반 JSON 포함
                     .githubPath(path)
@@ -107,8 +105,6 @@ public class PipelineService {
 
             return PipelineResponse.builder()
                     .workflowId(null)  // DB 사용 안 하므로 null
-                    .owner(request.getOwner())
-                    .repo(request.getRepo())
                     .workflowName(request.getWorkflowName())
                     .originalJson(request.getInputJson())
                     .githubPath(filePath)

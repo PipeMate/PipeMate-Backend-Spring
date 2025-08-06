@@ -17,16 +17,6 @@ public class PipelineResponse {
     private String workflowId;
 
     /**
-     * GitHub 레포지토리 소유자
-     */
-    private String owner;
-
-    /**
-     * GitHub 레포지토리 이름
-     */
-    private String repo;
-
-    /**
      * 워크플로우 이름
      */
     private String workflowName;
