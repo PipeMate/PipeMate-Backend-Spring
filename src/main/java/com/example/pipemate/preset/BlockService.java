@@ -47,7 +47,6 @@ public class BlockService {
                                     .type(type)
                                     .description(block.getDescription())
                                     .config(block.getConfig())
-                                    .jobName(block.getJobName())
                                     .domain(block.getDomain())
                                     .task(block.getTask())
                                     .build();
