@@ -1,5 +1,6 @@
-package com.example.pipemate.preset;
+package com.example.pipemate.preset.service;
 
+import com.example.pipemate.preset.repository.BlockRepository;
 import com.example.pipemate.preset.res.BlockResponse;
 import com.example.pipemate.preset.res.JobBlockResponse;
 import com.example.pipemate.preset.res.StepBlockResponse;
@@ -8,11 +9,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class BlockService {
+public class BlockPresetService {
 
     private final BlockRepository blockRepository;
 
-    public BlockService(BlockRepository blockRepository) {
+    public BlockPresetService(BlockRepository blockRepository) {
         this.blockRepository = blockRepository;
     }
 

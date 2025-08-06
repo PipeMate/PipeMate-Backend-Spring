@@ -1,5 +1,7 @@
-package com.example.pipemate.preset;
+package com.example.pipemate.preset.entity;
 
+import com.example.pipemate.preset.converter.JsonNodeConverter;
+import com.example.pipemate.preset.converter.StringArrayConverter;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,4 +1,4 @@
-package com.example.pipemate.preset;
+package com.example.pipemate.preset.converter;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
