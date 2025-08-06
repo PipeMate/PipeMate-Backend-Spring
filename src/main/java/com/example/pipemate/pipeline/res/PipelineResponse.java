@@ -27,31 +27,6 @@ public class PipelineResponse {
     private List<JsonNode> originalJson;
 
     /**
-     * 변환된 JSON 데이터 (res_input.json 형식)
-     */
-    private Map<String, Object> convertedJson;
-
-    /**
-     * 변환된 YAML 내용
-     */
-    private String yamlContent;
-
-    /**
-     * GitHub에서의 파일 경로
-     */
-    private String githubPath;
-
-    /**
-     * 생성 시간
-     */
-    private LocalDateTime createdAt;
-
-    /**
-     * 수정 시간
-     */
-    private LocalDateTime updatedAt;
-
-    /**
      * 성공 여부
      */
     private boolean success;

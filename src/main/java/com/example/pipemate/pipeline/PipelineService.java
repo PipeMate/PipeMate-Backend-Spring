@@ -69,7 +69,6 @@ public class PipelineService {
             return PipelineResponse.builder()
                     .workflowName(workflowName)
                     .originalJson(originalJson)          // 이제 블록기반 JSON 포함
-                    .githubPath(path)
                     .success(true)
                     .message("Workflow loaded and parsed from GitHub")
                     .build();
@@ -107,9 +106,6 @@ public class PipelineService {
                     .workflowId(null)  // DB 사용 안 하므로 null
                     .workflowName(request.getWorkflowName())
                     .originalJson(request.getInputJson())
-                    .githubPath(filePath)
-                    .createdAt(null)
-                    .updatedAt(LocalDateTime.now())
                     .success(true)
                     .message("Workflow successfully updated on GitHub")
                     .build();
