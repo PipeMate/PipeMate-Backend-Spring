@@ -1,5 +1,6 @@
 package com.example.pipemate.pipeline.converter;
 
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -9,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +31,10 @@ public class JsonWorkflowConverter {
     public Map<String, Object> convertToWorkflowJson(List<JsonNode> inputJsonBlocks) {
         try {
             ObjectNode root = objectMapper.createObjectNode();
-            ArrayNode steps = objectMapper.createArrayNode();
-            String jobId = null;
+            ObjectNode jobs = objectMapper.createObjectNode();
+
+            // job별로 steps를 관리하기 위한 Map
+            Map<String, ArrayNode> jobStepsMap = new HashMap<>();
 
             log.info("Starting JSON conversion process with {} blocks", inputJsonBlocks.size());
 
@@ -40,6 +44,10 @@ public class JsonWorkflowConverter {
                 // type이 없는 경우 deploy 블록 등으로 처리
                 if (type == null) {
                     if (block.has("uses") && block.has("with")) {
+                        // 기본 job에 추가 (job-name이 없으면 첫 번째 job 사용)
+                        String defaultJobName = jobStepsMap.keySet().isEmpty() ? "ci-pipeline" : jobStepsMap.keySet().iterator().next();
+                        ArrayNode steps = jobStepsMap.computeIfAbsent(defaultJobName, k -> objectMapper.createArrayNode());
+
                         ObjectNode step = objectMapper.createObjectNode();
                         step.put("name", block.get("name").asText());
                         step.put("uses", block.get("uses").asText());
@@ -62,14 +70,43 @@ public class JsonWorkflowConverter {
 
                     case "job":
                         if (config.has("jobs") && config.get("jobs").isObject()) {
-                            jobId = config.get("jobs").fieldNames().next();
-                            log.debug("Processed job block with jobId: {}", jobId);
+                            Iterator<String> jobNames = config.get("jobs").fieldNames();
+                            while (jobNames.hasNext()) {
+                                String jobName = jobNames.next();
+                                JsonNode jobConfig = config.get("jobs").get(jobName);
+
+                                // job 설정을 jobs에 추가
+                                ObjectNode jobNode = objectMapper.createObjectNode();
+                                jobConfig.fieldNames().forEachRemaining(fieldName -> {
+                                    if (!fieldName.equals("steps")) { // steps는 별도로 관리
+                                        jobNode.set(fieldName, jobConfig.get(fieldName));
+                                    }
+                                });
+                                jobs.set(jobName, jobNode);
+
+                                // 해당 job의 steps 배열 초기화
+                                jobStepsMap.put(jobName, objectMapper.createArrayNode());
+
+                                log.debug("Processed job block with jobName: {}", jobName);
+                            }
                         }
                         break;
 
                     case "step":
+                        // job-name을 확인하여 올바른 job에 step 추가
+                        String jobName = block.path("job-name").asText("ci-pipeline");
+
+                        // job이 없으면 기본 job 생성
+                        if (!jobs.has(jobName)) {
+                            ObjectNode defaultJob = objectMapper.createObjectNode();
+                            defaultJob.put("runs-on", "ubuntu-latest");
+                            jobs.set(jobName, defaultJob);
+                            jobStepsMap.put(jobName, objectMapper.createArrayNode());
+                        }
+
+                        ArrayNode steps = jobStepsMap.get(jobName);
                         steps.add(config);
-                        log.debug("Processed step block");
+                        log.debug("Processed step block for job: {}", jobName);
                         break;
 
                     default:
@@ -78,19 +115,23 @@ public class JsonWorkflowConverter {
                 }
             }
 
-            // jobs 구성
-            ObjectNode jobs = objectMapper.createObjectNode();
-            ObjectNode jobConfig = objectMapper.createObjectNode();
-            jobConfig.put("runs-on", "ubuntu-latest");
-            jobConfig.set("steps", steps);
+            // 각 job에 steps 추가
+            jobStepsMap.forEach((jobName, steps) -> {
+                if (jobs.has(jobName)) {
+                    ObjectNode jobNode = (ObjectNode) jobs.get(jobName);
+                    jobNode.set("steps", steps);
+                }
+            });
 
-            // jobId가 null인 경우 기본값 설정
-            if (jobId == null) {
-                jobId = "ci-pipeline";
-                log.warn("No jobId found, using default: {}", jobId);
+            // jobs가 비어있으면 기본 job 생성
+            if (jobs.size() == 0) {
+                ObjectNode defaultJob = objectMapper.createObjectNode();
+                defaultJob.put("runs-on", "ubuntu-latest");
+                defaultJob.set("steps", objectMapper.createArrayNode());
+                jobs.set("ci-pipeline", defaultJob);
+                log.warn("No jobs found, using default: ci-pipeline");
             }
 
-            jobs.set(jobId, jobConfig);
             root.set("jobs", jobs);
 
             log.info("JSON conversion completed successfully");

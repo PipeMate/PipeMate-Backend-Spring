@@ -1,18 +1,20 @@
-package com.example.pipemate.preset;
+package com.example.pipemate.preset.service;
 
+import com.example.pipemate.preset.repository.BlockRepository;
 import com.example.pipemate.preset.res.BlockResponse;
 import com.example.pipemate.preset.res.JobBlockResponse;
 import com.example.pipemate.preset.res.StepBlockResponse;
 import com.example.pipemate.preset.res.TriggerBlockResponse;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
-public class BlockService {
+public class BlockPresetService {
 
     private final BlockRepository blockRepository;
 
-    public BlockService(BlockRepository blockRepository) {
+    public BlockPresetService(BlockRepository blockRepository) {
         this.blockRepository = blockRepository;
     }
 
@@ -47,7 +49,6 @@ public class BlockService {
                                     .type(type)
                                     .description(block.getDescription())
                                     .config(block.getConfig())
-                                    .jobName(block.getJobName())
                                     .domain(block.getDomain())
                                     .task(block.getTask())
                                     .build();

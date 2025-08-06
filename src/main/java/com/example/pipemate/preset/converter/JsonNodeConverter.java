@@ -1,5 +1,4 @@
-package com.example.pipemate.preset;
-
+package com.example.pipemate.preset.converter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;

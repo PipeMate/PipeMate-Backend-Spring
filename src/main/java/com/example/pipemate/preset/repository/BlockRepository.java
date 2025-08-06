@@ -1,5 +1,6 @@
-package com.example.pipemate.preset;
+package com.example.pipemate.preset.repository;
 
+import com.example.pipemate.preset.entity.Block;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
