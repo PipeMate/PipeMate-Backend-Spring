@@ -40,7 +40,7 @@ public class PipelineController {
 
     @GetMapping("/{ymlFileName}")
     @Operation(summary = "특정 파이프라인(워크플로우)을 블록 리스트 형태로 조회",
-            description = "Github에 저장된 특정 파이프라인(워크플로우) 정보를 블록 형태로 가공하여 반환합니다.")
+            description = "Github에 저장된 특정 파이프라인(워크플로우) 정보를 블록 형태로 가공하여 반환합니다. yml 파일의 확장자는 생략합니다.")
     public ResponseEntity<PipelineResponse> getStoredWorkflow(
             @PathVariable String ymlFileName,
             @RequestParam String owner,

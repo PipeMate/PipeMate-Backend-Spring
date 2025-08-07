@@ -27,10 +27,10 @@ public class PipelineService {
         try {
             log.info("Starting workflow conversion process for {}/{}", request.getOwner(), request.getRepo());
 
-            // 1. JSON 변환 (input.json -> res_input.json)
+            // 1. JSON 수동 변환 (input.json -> res_input.json)
             Map<String, Object> convertedJson = jsonWorkflowConverter.convertToWorkflowJson(request.getInputJson());
 
-            // 2. YAML 변환
+            // 2. YAML 자동 변환 (snakeYAML 사용)
             String yamlContent = yamlConverter.convertJsonToYaml(convertedJson);
 
             // 3. GitHub에 YAML 파일 업로드
