@@ -6,6 +6,8 @@ import com.example.pipemate.secret.res.GroupedGithubSecretListResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +18,7 @@ public class GitHubSecretsController {
 
     private final GitHubSecretsService secretsService;
 
+    @Cacheable("secret-key-list")
     @GetMapping("/secrets")
     @Operation(summary = "레포지토리의 도메인별 시크릿 목록 조회",
             description = "도메인 접두어를 기준으로 그룹화된 시크릿 목록을 반환합니다.")
@@ -34,6 +37,7 @@ public class GitHubSecretsController {
         return ResponseEntity.ok(response);
     }
 
+    @CacheEvict(value = "secret-key-list", allEntries = true)
     @PutMapping("/secrets")
     @Operation(summary = "레포지토리 시크릿 생성 또는 수정",
             description = "레포지토리에 새로운 시크릿을 생성하거나 기존 시크릿을 업데이트합니다.")
@@ -71,6 +75,7 @@ public class GitHubSecretsController {
         return ResponseEntity.ok(response);
     }
 
+    @CacheEvict(value = "secret-key-list", allEntries = true)
     @DeleteMapping("/secrets")
     @Operation(summary = "레포지토리 시크릿 삭제", description = "지정한 시크릿 이름의 레포지토리 시크릿을 삭제합니다.")
     public ResponseEntity<Void> deleteSecret(
