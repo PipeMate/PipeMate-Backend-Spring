@@ -34,6 +34,7 @@ public class GitHubWorkflowService {
         return githubApiClient.fetchWorkflowRun(owner, repo, runId, token);
     }
 
+    @Cacheable("workflow-run-log") // 깃허브 워크플로우 실행의 텍스트 로그 조회 캐싱 적용
     public String downloadAndExtractLogs(String owner, String repo, Long runId, String token) {
         return githubApiClient.downloadAndExtractLogs(owner, repo, runId, token);
     }
