@@ -8,6 +8,7 @@ import com.example.pipemate.util.GithubApiClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ public class PipelineService {
     private final JsonWorkflowConverter jsonWorkflowConverter;
     private final YamlConverter yamlConverter;
 
+    @CacheEvict(value = "workflow-file-list", allEntries = true) // 깃허브 워크플로우 파일 목록 캐싱 초기화
     public void convertAndSaveWorkflow(PipelineRequest request, String token) {
         try {
             log.info("Starting workflow conversion process for {}/{}", request.getOwner(), request.getRepo());
@@ -78,6 +80,7 @@ public class PipelineService {
         }
     }
 
+    @CacheEvict(value = "workflow-file-list", allEntries = true) // 깃허브 워크플로우 파일 목록 캐싱 초기화
     public PipelineResponse updateWorkflowOnGitHub(PipelineRequest request, String token) {
         try {
             log.info("Updating GitHub workflow for {}/{}", request.getOwner(), request.getRepo());
@@ -116,6 +119,7 @@ public class PipelineService {
         }
     }
 
+    @CacheEvict(value = "workflow-file-list", allEntries = true) // 깃허브 워크플로우 파일 목록 캐싱 초기화
     public void deleteWorkflowFromGitHub(String ymlFileName, String owner, String repo, String token) {
         try {
             // GitHub에서 파일 삭제

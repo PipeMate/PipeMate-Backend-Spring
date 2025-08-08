@@ -28,10 +28,6 @@ public class GitHubWorkflowController {
     ) {
         String token = request.getHeader("Authorization");
 
-        log.info("owner: {}", owner);
-        log.info("repo: {}", repo);
-        log.info("Authorization header: {}", token);
-
         if (token == null || !token.startsWith("Bearer ")) {
             throw new IllegalArgumentException("Authorization header must be provided in 'Bearer ghp_xxx' format");
         }

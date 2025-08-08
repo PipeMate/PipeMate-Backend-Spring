@@ -8,6 +8,9 @@ import com.goterl.lazysodium.LazySodiumJava;
 import com.goterl.lazysodium.SodiumJava;
 import com.goterl.lazysodium.interfaces.Box;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -17,6 +20,7 @@ import java.util.*;
 
 import static org.yaml.snakeyaml.tokens.Token.ID.Key;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GitHubSecretsService {
@@ -43,7 +47,10 @@ public class GitHubSecretsService {
         return response.getBody();
     }
 
+    @Cacheable("secret-key-list")
     public GroupedGithubSecretListResponse getGroupedRepositorySecrets(String owner, String repo, String token) {
+        log.info("[GitHubSecretsController] 레포지토리의 도메인별 시크릿 목록 조회");
+
         GithubSecretListResponse original = getRepositorySecrets(owner, repo, token); // 기존 로직 그대로 호출
 
         Map<String, List<GithubSecretListResponse.SecretItem>> grouped = new HashMap<>();
@@ -60,6 +67,7 @@ public class GitHubSecretsService {
         return response;
     }
 
+    @CacheEvict(value = "secret-key-list", allEntries = true)
     public void createOrUpdateSecret(String owner, String repo, String secretName, GithubSecretRequest request, String token) {
         // 1. 공개키 조회
         String keyUrl = String.format("https://api.github.com/repos/%s/%s/actions/secrets/public-key", owner, repo);
@@ -103,6 +111,7 @@ public class GitHubSecretsService {
         }
     }
 
+    @Cacheable("repo-public-key") // 깃허브 레포지토리 퍼블릭 키 캐싱 적용
     public GithubPublicKeyResponse getPublicKey(String owner, String repo, String token) {
         String url = String.format("https://api.github.com/repos/%s/%s/actions/secrets/public-key", owner, repo);
 
@@ -140,6 +149,8 @@ public class GitHubSecretsService {
         return Base64.getEncoder().encodeToString(cipherBytes);
     }
 
+
+    @CacheEvict(value = "secret-key-list", allEntries = true)
     public void deleteSecret(String owner, String repo, String secretName, String token) {
         String url = String.format("https://api.github.com/repos/%s/%s/actions/secrets/%s", owner, repo, secretName);
 

@@ -49,6 +49,8 @@ dependencies {
     implementation 'com.goterl:lazysodium-java:5.1.1'       // Java 바인딩
     implementation 'net.java.dev.jna:jna:5.8.0' // LazySodium 의존성
 
+    // Caffeine (캐싱)
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 
 }
 
