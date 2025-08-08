@@ -9,11 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -64,10 +60,12 @@ public class JsonWorkflowConverter {
                     case "trigger":
                         root.put("name", config.path("name").asText());
                         root.set("on", config.get("on"));
+                        root.put("x_name", block.path("name").asText(""));
+                        root.put("x_description", block.path("description").asText(""));
                         log.debug("Processed trigger block: {}", config.path("name").asText());
                         break;
 
-                    case "job":
+                    case "job": {
                         String jobId = block.path("job-name").asText("ci-pipeline");
                         ObjectNode jobNode = objectMapper.createObjectNode();
 
@@ -77,15 +75,18 @@ public class JsonWorkflowConverter {
                             }
                         });
 
+                        jobNode.put("x_name", block.path("name").asText(""));
+                        jobNode.put("x_description", block.path("description").asText(""));
+
                         jobs.set(jobId, jobNode);
                         jobStepsMap.put(jobId, objectMapper.createArrayNode());
                         log.debug("Processed job block with jobName: {}", jobId);
                         break;
+                    }
 
-                    case "step":
+                    case "step": {
                         String targetJobId = block.path("job-name").asText("ci-pipeline");
 
-                        // 없으면 생성
                         if (!jobs.has(targetJobId)) {
                             ObjectNode defaultJob = objectMapper.createObjectNode();
                             defaultJob.put("runs-on", "ubuntu-latest");
@@ -94,9 +95,17 @@ public class JsonWorkflowConverter {
                         }
 
                         ArrayNode stepList = jobStepsMap.get(targetJobId);
-                        stepList.add(config);
+
+                        ObjectNode configCopy = config.deepCopy();
+                        configCopy.put("x_name", block.path("name").asText(""));
+                        configCopy.put("x_description", block.path("description").asText(""));
+                        configCopy.put("x_domain", block.path("domain").asText(""));
+                        configCopy.set("x_task", block.path("task"));
+
+                        stepList.add(configCopy);
                         log.debug("Processed step block for job: {}", targetJobId);
                         break;
+                    }
 
                     default:
                         log.warn("Unknown type: {}", type);
@@ -104,7 +113,6 @@ public class JsonWorkflowConverter {
                 }
             }
 
-            // steps 추가
             jobStepsMap.forEach((jobName, steps) -> {
                 if (jobs.has(jobName)) {
                     ObjectNode jobNode = (ObjectNode) jobs.get(jobName);
@@ -112,7 +120,6 @@ public class JsonWorkflowConverter {
                 }
             });
 
-            // jobs가 없으면 기본 job 추가
             if (jobs.size() == 0) {
                 ObjectNode defaultJob = objectMapper.createObjectNode();
                 defaultJob.put("runs-on", "ubuntu-latest");
