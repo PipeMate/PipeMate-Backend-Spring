@@ -3,17 +3,22 @@ package com.example.pipemate.workflow;
 import com.example.pipemate.util.GithubApiClient;
 import com.example.pipemate.workflow.res.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GitHubWorkflowService {
 
     private final GithubApiClient githubApiClient;
 
+    @Cacheable("workflow-file-list") // 깃허브 워크플로우 파일 목록 캐싱 적용
     public WorkflowListResponse getWorkflows(String owner, String repo, String token) {
+        log.info("[GitHubWorkflowService] 워크플로우 파일 목록 조회");
         return githubApiClient.fetchWorkflowList(owner, repo, token);
     }
 
