@@ -163,13 +163,11 @@ public class JsonWorkflowConverter {
                     ObjectNode jobConfigCopy = jobConfig.deepCopy();
                     JsonNode stepsNode = jobConfigCopy.remove("steps"); // steps 분리
 
+                    // ✅ 수정된 job block 생성
                     ObjectNode jobWrapper = objectMapper.createObjectNode();
-                    ObjectNode config = objectMapper.createObjectNode();
-                    ObjectNode jobsNode = objectMapper.createObjectNode();
-                    jobsNode.set(jobId, jobConfigCopy);
-                    config.set("jobs", jobsNode);
                     jobWrapper.put("type", "job");
-                    jobWrapper.set("config", config);
+                    jobWrapper.put("job-name", jobId);  // <- 핵심
+                    jobWrapper.set("config", jobConfigCopy);
                     blocks.add(jobWrapper);
 
                     // step blocks
@@ -177,6 +175,7 @@ public class JsonWorkflowConverter {
                         for (JsonNode step : stepsNode) {
                             ObjectNode stepBlock = objectMapper.createObjectNode();
                             stepBlock.put("type", "step");
+                            stepBlock.put("job-name", jobId); // ✅ step에도 job-name을 명시해줍니다
                             stepBlock.set("config", step);
                             blocks.add(stepBlock);
                         }
