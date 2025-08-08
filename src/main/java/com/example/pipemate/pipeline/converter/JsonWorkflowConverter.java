@@ -9,11 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -64,10 +60,12 @@ public class JsonWorkflowConverter {
                     case "trigger":
                         root.put("name", config.path("name").asText());
                         root.set("on", config.get("on"));
+                        root.put("x_name", block.path("name").asText(""));
+                        root.put("x_description", block.path("description").asText(""));
                         log.debug("Processed trigger block: {}", config.path("name").asText());
                         break;
 
-                    case "job":
+                    case "job": {
                         String jobId = block.path("job-name").asText("ci-pipeline");
                         ObjectNode jobNode = objectMapper.createObjectNode();
 
@@ -77,15 +75,18 @@ public class JsonWorkflowConverter {
                             }
                         });
 
+                        jobNode.put("x_name", block.path("name").asText(""));
+                        jobNode.put("x_description", block.path("description").asText(""));
+
                         jobs.set(jobId, jobNode);
                         jobStepsMap.put(jobId, objectMapper.createArrayNode());
                         log.debug("Processed job block with jobName: {}", jobId);
                         break;
+                    }
 
-                    case "step":
+                    case "step": {
                         String targetJobId = block.path("job-name").asText("ci-pipeline");
 
-                        // 없으면 생성
                         if (!jobs.has(targetJobId)) {
                             ObjectNode defaultJob = objectMapper.createObjectNode();
                             defaultJob.put("runs-on", "ubuntu-latest");
@@ -94,9 +95,17 @@ public class JsonWorkflowConverter {
                         }
 
                         ArrayNode stepList = jobStepsMap.get(targetJobId);
-                        stepList.add(config);
+
+                        ObjectNode configCopy = config.deepCopy();
+                        configCopy.put("x_name", block.path("name").asText(""));
+                        configCopy.put("x_description", block.path("description").asText(""));
+                        configCopy.put("x_domain", block.path("domain").asText(""));
+                        configCopy.set("x_task", block.path("task"));
+
+                        stepList.add(configCopy);
                         log.debug("Processed step block for job: {}", targetJobId);
                         break;
+                    }
 
                     default:
                         log.warn("Unknown type: {}", type);
@@ -104,7 +113,6 @@ public class JsonWorkflowConverter {
                 }
             }
 
-            // steps 추가
             jobStepsMap.forEach((jobName, steps) -> {
                 if (jobs.has(jobName)) {
                     ObjectNode jobNode = (ObjectNode) jobs.get(jobName);
@@ -112,7 +120,6 @@ public class JsonWorkflowConverter {
                 }
             });
 
-            // jobs가 없으면 기본 job 추가
             if (jobs.size() == 0) {
                 ObjectNode defaultJob = objectMapper.createObjectNode();
                 defaultJob.put("runs-on", "ubuntu-latest");
@@ -133,62 +140,81 @@ public class JsonWorkflowConverter {
     }
 
 
-    public List<JsonNode> convertWorkflowJsonToBlocks(Map<String, Object> workflowJson) {
-        try {
-            List<JsonNode> blocks = new ArrayList<>();
-            ObjectNode root = objectMapper.convertValue(workflowJson, ObjectNode.class);
 
-            // 1. trigger block
-            if (root.has("on") || root.has("name")) {
-                ObjectNode config = objectMapper.createObjectNode();
-                if (root.has("name")) config.put("name", root.get("name").asText());
-                if (root.has("on")) config.set("on", root.get("on"));
+    public List<JsonNode> convertWorkflowJsonToBlocks(Map<String, Object> yamlJsonMap) {
+        List<JsonNode> blockList = new ArrayList<>();
 
-                ObjectNode triggerBlock = objectMapper.createObjectNode();
-                triggerBlock.put("type", "trigger");
-                triggerBlock.set("config", config);
-                blocks.add(triggerBlock);
-            }
+        // ObjectMapper 생성
+        ObjectMapper mapper = new ObjectMapper();
 
-            // 2. job + step block
-            if (root.has("jobs")) {
-                ObjectNode jobs = (ObjectNode) root.get("jobs");
+        // Convert Map to JsonNode
+        JsonNode root = mapper.convertValue(yamlJsonMap, JsonNode.class);
 
-                Iterator<String> jobIds = jobs.fieldNames();
-                while (jobIds.hasNext()) {
-                    String jobId = jobIds.next();
-                    ObjectNode jobConfig = (ObjectNode) jobs.get(jobId);
+        // 1. trigger block
+        // 1. config 안에 name (루트에 있던), on 포함
+        ObjectNode triggerConfig = mapper.createObjectNode();
+        triggerConfig.put("name", root.path("name").asText(""));  // 루트 name을 config.name에 포함
+        triggerConfig.set("on", root.path("on"));
 
-                    // job block 생성 (steps 제거 후 추가)
-                    ObjectNode jobConfigCopy = jobConfig.deepCopy();
-                    JsonNode stepsNode = jobConfigCopy.remove("steps"); // steps 분리
+        // 2. trigger 블록 전체 구성
+        ObjectNode triggerBlock = mapper.createObjectNode();
+        triggerBlock.put("type", "trigger");
+        triggerBlock.put("name", root.path("x_name").asText("워크플로우 기본 설정"));
+        triggerBlock.put("description", root.path("x_description").asText("GitHub Actions 워크플로우 이름과 트리거 조건을 설정하는 블록입니다."));
+        triggerBlock.set("config", triggerConfig);
 
-                    // ✅ 수정된 job block 생성
-                    ObjectNode jobWrapper = objectMapper.createObjectNode();
-                    jobWrapper.put("type", "job");
-                    jobWrapper.put("job-name", jobId);  // <- 핵심
-                    jobWrapper.set("config", jobConfigCopy);
-                    blocks.add(jobWrapper);
+        // 3. 리스트에 추가
+        blockList.add(triggerBlock);
 
-                    // step blocks
-                    if (stepsNode != null && stepsNode.isArray()) {
-                        for (JsonNode step : stepsNode) {
-                            ObjectNode stepBlock = objectMapper.createObjectNode();
-                            stepBlock.put("type", "step");
-                            stepBlock.put("job-name", jobId); // ✅ step에도 job-name을 명시해줍니다
-                            stepBlock.set("config", step);
-                            blocks.add(stepBlock);
+
+        // 2. jobs
+        JsonNode jobsNode = root.path("jobs");
+        Iterator<String> jobNames = jobsNode.fieldNames();
+
+        while (jobNames.hasNext()) {
+            String jobName = jobNames.next();
+            JsonNode jobNode = jobsNode.path(jobName);
+
+            // job block
+            ObjectNode jobBlock = mapper.createObjectNode();
+            jobBlock.put("type", "job");
+            jobBlock.put("job-name", jobName);
+            jobBlock.put("name", jobNode.path("x_name").asText(jobName));
+            jobBlock.put("description", jobNode.path("x_description").asText(""));
+
+            // config에서 steps, x_name, x_description 제외
+            ObjectNode jobConfigNode = jobNode.deepCopy();
+            jobConfigNode.remove(Arrays.asList("steps", "x_name", "x_description"));
+            jobBlock.set("config", jobConfigNode);
+
+            blockList.add(jobBlock);
+
+            // step blocks
+            JsonNode steps = jobNode.path("steps");
+            if (steps.isArray()) {
+                for (JsonNode step : steps) {
+                    ObjectNode stepBlock = mapper.createObjectNode();
+                    stepBlock.put("type", "step");
+                    stepBlock.put("job-name", jobName);
+                    stepBlock.put("name", step.path("x_name").asText(step.path("name").asText("이름 없음")));
+                    stepBlock.put("description", step.path("x_description").asText(""));
+                    stepBlock.put("domain", step.path("x_domain").asText(""));
+                    stepBlock.set("task", step.path("x_task").isMissingNode() ? mapper.createArrayNode() : step.path("x_task"));
+
+                    // config는 x_로 시작하는 key를 제외하고 모음
+                    ObjectNode configNode = mapper.createObjectNode();
+                    step.fields().forEachRemaining(entry -> {
+                        if (!entry.getKey().startsWith("x_")) {
+                            configNode.set(entry.getKey(), entry.getValue());
                         }
-                    }
+                    });
+
+                    stepBlock.set("config", configNode);
+                    blockList.add(stepBlock);
                 }
             }
-
-            log.info("Workflow JSON successfully converted to block-based JSON. Total blocks: {}", blocks.size());
-            return blocks;
-
-        } catch (Exception e) {
-            log.error("Error converting workflow JSON to blocks", e);
-            throw new RuntimeException("Failed to convert workflow JSON to block format: " + e.getMessage(), e);
         }
+
+        return blockList;
     }
 }
