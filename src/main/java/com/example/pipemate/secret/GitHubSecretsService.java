@@ -111,6 +111,7 @@ public class GitHubSecretsService {
         }
     }
 
+    @Cacheable("repo-public-key") // 깃허브 레포지토리 퍼블릭 키 캐싱 적용
     public GithubPublicKeyResponse getPublicKey(String owner, String repo, String token) {
         String url = String.format("https://api.github.com/repos/%s/%s/actions/secrets/public-key", owner, repo);
 
