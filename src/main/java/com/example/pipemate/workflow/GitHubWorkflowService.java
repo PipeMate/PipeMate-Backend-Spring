@@ -30,7 +30,9 @@ public class GitHubWorkflowService {
         return githubApiClient.fetchWorkflowRuns(owner, repo, token);
     }
 
+    @Cacheable("workflow-run-detail") // 깃허브 워크플로우 실행 상세 정보 조회 캐싱 적용
     public WorkflowRunResponse getWorkflowRun(String owner, String repo, Long runId, String token) {
+        log.info("[GitHubWorkflowService] 워크플로우 실행 상세 정보 조회");
         return githubApiClient.fetchWorkflowRun(owner, repo, runId, token);
     }
 
