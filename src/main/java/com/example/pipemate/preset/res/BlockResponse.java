@@ -32,7 +32,7 @@ public abstract class BlockResponse {
                         .type(block.getType())
                         .description(block.getDescription())
                         .config(block.getConfig())
-                        .jobName(block.getJobName())
+                        .jobName(pb.getJobName()) // PipelineBlock에서 가져오기
                         .build();
 
             case "step":
@@ -42,7 +42,7 @@ public abstract class BlockResponse {
                         .type(block.getType())
                         .description(block.getDescription())
                         .config(block.getConfig())
-                        .jobName(block.getJobName())
+                        .jobName(pb.getJobName())
                         .domain(block.getDomain())
                         .task(block.getTask())
                         .build();
