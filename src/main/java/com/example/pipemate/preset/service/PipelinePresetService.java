@@ -6,6 +6,8 @@ import com.example.pipemate.preset.entity.Pipeline;
 import com.example.pipemate.preset.entity.PipelineBlock;
 import com.example.pipemate.preset.repository.PipelineRepository;
 import com.example.pipemate.preset.res.BlockResponse;
+import com.example.pipemate.preset.res.JobBlockResponse;
+import com.example.pipemate.preset.res.StepBlockResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -29,9 +31,20 @@ public class PipelinePresetService {
 
             List<JsonNode> blockJsons = pipeline.getBlocks().stream()
                     .sorted(Comparator.comparingInt(PipelineBlock::getPosition))
-                    .map(BlockResponse::from)
-                    .map(block -> objectMapper.convertValue(block, JsonNode.class))
+                    .map(pb -> {
+                        BlockResponse blockResponse = BlockResponse.from(pb);
+
+                        // 타입별로만 jobName 세팅
+                        if (blockResponse instanceof JobBlockResponse) {
+                            ((JobBlockResponse) blockResponse).setJobName(pb.getJobName());
+                        } else if (blockResponse instanceof StepBlockResponse) {
+                            ((StepBlockResponse) blockResponse).setJobName(pb.getJobName());
+                        }
+
+                        return objectMapper.convertValue(blockResponse, JsonNode.class);
+                    })
                     .collect(Collectors.toList());
+
 
             return PipelineResponse.builder()
                     .workflowId(String.valueOf(pipeline.getId()))
