@@ -18,8 +18,6 @@ import org.springframework.web.client.RestTemplate;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static org.yaml.snakeyaml.tokens.Token.ID.Key;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor

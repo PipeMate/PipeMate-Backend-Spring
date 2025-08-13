@@ -35,7 +35,8 @@ public class YamlConverter {
             options.setIndicatorIndent(1);                                  // 인디케이터 들여쓰기
 
             // SnakeYAML 인스턴스 생성
-            Yaml yaml = new Yaml(new PrettyRepresenter(options), options);            StringWriter writer = new StringWriter();
+            Yaml yaml = new Yaml(new PrettyRepresenter(options), options);
+            StringWriter writer = new StringWriter();
 
             // 순서 보장을 위해 LinkedHashMap으로 재귀 정렬
             Map<String, Object> ordered = orderKeysRecursively(jsonData);

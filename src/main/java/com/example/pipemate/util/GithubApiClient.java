@@ -88,8 +88,7 @@ public class GithubApiClient {
             Map<String, Object> parsed = yaml.load(yamlText);
             Object on = parsed.get("on");
 
-            if (on instanceof Map) {
-                Map<?, ?> onMap = (Map<?, ?>) on;
+            if (on instanceof Map<?, ?> onMap) {
                 Object push = onMap.get("push");
 
                 if (push instanceof Map) {

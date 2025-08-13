@@ -37,7 +37,7 @@ public class JsonWorkflowConverter {
 
                 if (type == null) {
                     if (block.has("uses") && block.has("with")) {
-                        String defaultJobName = jobStepsMap.keySet().isEmpty()
+                        String defaultJobName = jobStepsMap.isEmpty()
                                 ? "ci-pipeline"
                                 : jobStepsMap.keySet().iterator().next();
 
@@ -138,7 +138,6 @@ public class JsonWorkflowConverter {
             throw new RuntimeException("Failed to convert JSON workflow: " + e.getMessage(), e);
         }
     }
-
 
 
     public List<JsonNode> convertWorkflowJsonToBlocks(Map<String, Object> yamlJsonMap) {
