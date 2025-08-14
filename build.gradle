@@ -21,37 +21,38 @@ configurations {
 
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' } // 👈 필수: lazysodium은 JitPack에만 있음
-
+    maven { url 'https://jitpack.io' } // LazySodium(JitPack) 의존성 저장소
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-//    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
-//    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-//    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-//    implementation 'org.springframework.boot:spring-boot-starter-security'
+    // === Spring Boot Starters ===
     implementation 'org.springframework.boot:spring-boot-starter-web'
-//    implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // === Database Drivers ===
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-//    testImplementation 'org.springframework.security:spring-security-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'org.postgresql:postgresql:42.7.3'
-    // Swagger
-    implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.0.3'
 
-    implementation 'com.goterl:lazysodium-java:5.1.1'       // Java 바인딩
-    implementation 'net.java.dev.jna:jna:5.8.0' // LazySodium 의존성
+    // === Swagger / API 문서 ===
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.3'
 
-    // Caffeine (캐싱)
+    // === LazySodium & Native 의존성 ===
+    implementation 'com.goterl:lazysodium-java:5.1.1'
+    implementation 'net.java.dev.jna:jna:5.8.0'
+
+    // === Cache ===
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 
+    // === Lombok ===
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // === Test ===
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    //testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
