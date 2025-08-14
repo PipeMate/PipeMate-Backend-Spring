@@ -23,6 +23,14 @@ public class PipelineService {
     private final JsonWorkflowConverter jsonWorkflowConverter;
     private final YamlConverter yamlConverter;
 
+    /**
+     * 요청받은 블록 기반 JSON 워크플로우 데이터를 GitHub Actions 워크플로우(YAML) 파일로 변환하여 업로드한다.
+     * <p>
+     * 처리 단계:
+     * 1. JSON → GitHub Actions 워크플로우 JSON 구조로 변환
+     * 2. JSON → YAML 변환
+     * 3. 변환된 YAML을 `.github/workflows/` 경로에 파일로 업로드
+     */
     @CacheEvict(value = "workflow-file-list", allEntries = true) // 깃허브 워크플로우 파일 목록 캐싱 초기화
     public void convertAndSaveWorkflow(PipelineRequest request, String token) {
         try {
@@ -53,6 +61,16 @@ public class PipelineService {
         }
     }
 
+    /**
+     * GitHub 저장소에서 지정된 워크플로우(YAML)를 가져와
+     * 블록 기반 JSON 구조(PipelineBlock)로 변환한 후 응답 객체로 반환한다.
+     * <p>
+     * 처리 순서:
+     * 1. GitHub API를 통해 `.github/workflows/{workflowName}.yml` 파일 내용 조회
+     * 2. YAML → 일반 JSON(Map 구조) 변환
+     * 3. 일반 JSON → 블록 기반 JSON(List<JsonNode>) 변환
+     * 4. 변환 결과를 PipelineResponse로 래핑 후 반환
+     */
     public PipelineResponse getWorkflowFromGitHub(String owner, String repo, String workflowName, String token) {
         try {
             String path = ".github/workflows/" + workflowName + ".yml";
@@ -79,6 +97,15 @@ public class PipelineService {
         }
     }
 
+    /**
+     * GitHub에 저장된 특정 워크플로우(YAML) 파일을 업데이트한다.
+     * <p>
+     * 처리 순서:
+     * 1. 입력으로 받은 블록 기반 JSON(workflow 블록 구조)을 GitHub Actions 호환 JSON으로 변환
+     * 2. JSON을 YAML 포맷으로 변환
+     * 3. 변환된 YAML 파일을 `.github/workflows/{workflowName}.yml` 경로에 덮어쓰기 방식으로 업로드
+     * 4. 캐시되어 있던 워크플로우 목록(`workflow-file-list`)은 무효화(@CacheEvict) 처리
+     */
     @CacheEvict(value = "workflow-file-list", allEntries = true) // 깃허브 워크플로우 파일 목록 캐싱 초기화
     public PipelineResponse updateWorkflowOnGitHub(PipelineRequest request, String token) {
         try {
