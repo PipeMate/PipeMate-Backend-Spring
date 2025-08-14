@@ -33,6 +33,11 @@ public class GithubApiClient {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    public GithubApiClient() {
+        this.restTemplate = new RestTemplate();
+        this.objectMapper = new ObjectMapper();
+    }
+
     /**
      * 지정된 소유자와 저장소의 GitHub Actions 워크플로우 리스트를 조회한다.
      * 각 워크플로우의 YAML 파일을 가져와서 수동 실행 가능 여부와 사용 가능한 브랜치 정보도 함께 파싱한다.
