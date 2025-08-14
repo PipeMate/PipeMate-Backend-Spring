@@ -51,7 +51,7 @@ public class PipelinePresetService {
                     .workflowName(pipeline.getName())
                     .originalJson(blockJsons) // 타입 맞춰서 BlockResponse로 교체
                     .success(true)
-                    .message("성공적으로 로딩됨")
+                    .message("successfully loaded")
                     .build();
 
         }).collect(Collectors.toList());

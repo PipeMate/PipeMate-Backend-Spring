@@ -24,9 +24,6 @@ import java.time.OffsetDateTime;
 @EqualsAndHashCode(of = "id")
 public class PipelineBlock {
 
-    /**
-     * 단일 PK로 간단하게 갑니다
-     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
