@@ -3,8 +3,8 @@
 
 ## 주요 기능 
 **블록 기반 워크플로우 생성, 조회, 수정, 삭제**
--  블록 기반 JSON -> GitHub Actions YAML 변환 및 업로드
--  GitHub Actions YAML -> 블록 기반 JSON 변환 후 응답 
+-  블록 기반 JSON -> GitHub Actions YAML 변환 및 깃허브 업로드
+-  GitHub Actions YAML -> 블록 기반 JSON 변환 후 클라이언트에 응답 
 -  블록 기반 워크플로우 수정 및 삭제
 
 **워크플로우 실행 및 상세 정보 조회**
@@ -14,7 +14,7 @@
 
 **프리셋 조회(preset)**
 - 블록 기반 워크플로우 설계를 위한 프리셋 조회
-- 기 제공되는 워크플로우 프리셋 조회 
+- 주요 워크플로우 프리셋 조회 
 
 **GitHub Secrets 관리**
 - 저장소 시크릿 생성·수정 (LazySodium 암호화)
