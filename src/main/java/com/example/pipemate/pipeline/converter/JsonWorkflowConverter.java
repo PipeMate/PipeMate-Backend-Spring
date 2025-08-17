@@ -58,7 +58,7 @@ public class JsonWorkflowConverter {
                         break;
 
                     case "job": { // job 블록 생성
-                        String jobId = block.path("job-name").asText("ci-pipeline");
+                        String jobId = block.path("jobName").asText("ci-pipeline");
                         ObjectNode jobNode = objectMapper.createObjectNode();
 
                         config.fieldNames().forEachRemaining(fieldName -> {
@@ -77,7 +77,7 @@ public class JsonWorkflowConverter {
                     }
 
                     case "step": { // step 블록 생성
-                        String targetJobId = block.path("job-name").asText("ci-pipeline");
+                        String targetJobId = block.path("jobName").asText("ci-pipeline");
 
                         if (!jobs.has(targetJobId)) {
                             ObjectNode defaultJob = objectMapper.createObjectNode();
