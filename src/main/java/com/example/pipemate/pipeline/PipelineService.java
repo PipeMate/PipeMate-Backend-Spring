@@ -1,7 +1,6 @@
 package com.example.pipemate.pipeline;
 
-import com.example.pipemate.pipeline.converter.JsonWorkflowConverter;
-import com.example.pipemate.pipeline.converter.YamlConverter;
+import com.example.pipemate.pipeline.converter.*;
 import com.example.pipemate.pipeline.req.PipelineRequest;
 import com.example.pipemate.pipeline.res.PipelineResponse;
 import com.example.pipemate.util.GithubApiClient;
@@ -34,7 +33,10 @@ public class PipelineService {
             // 2. YAML 자동 변환 (snakeYAML 사용)
             String yamlContent = yamlConverter.convertJsonToYaml(convertedJson);
 
-            // 3. GitHub에 YAML 파일 업로드
+            // 3. x_* 키를 주석으로 남김 (하위 블록 포함)
+            yamlContent = YamlXStripAndComment.transform(yamlContent);
+
+            // 4. GitHub에 YAML 파일 업로드
             String filePath = ".github/workflows/" + request.getWorkflowName() + ".yml";
             githubApiClient.createFile(
                     request.getOwner(),
@@ -60,10 +62,13 @@ public class PipelineService {
             // 1. GitHub에서 YML 가져오기
             String yamlContent = githubApiClient.getFileContent(owner, repo, path, token);
 
-            // 2. YAML → 일반 JSON Map
-            Map<String, Object> convertedJson = yamlConverter.convertYamlToJson(yamlContent);
+            // 2. 주석(#) 처리된 x_ 키와 step을 복구
+            String uncommented = YamlHashUncommenter.transform(yamlContent);
 
-            // 3. 일반 JSON → 블록 기반 JSON
+            // 3. YAML → 일반 JSON Map
+            Map<String, Object> convertedJson = yamlConverter.convertYamlToJson(uncommented);
+
+            // 4. 일반 JSON → 블록 기반 JSON
             List<JsonNode> originalJson = jsonWorkflowConverter.convertWorkflowJsonToBlocks(convertedJson);
 
             // 4. 응답 생성
@@ -90,7 +95,10 @@ public class PipelineService {
             // 2. YAML 변환
             String yamlContent = yamlConverter.convertJsonToYaml(convertedJson);
 
-            // 3. GitHub에 업로드 (덮어쓰기)
+            // 3. x_* 키를 주석으로 남김 (하위 블록 포함)
+            yamlContent = YamlXStripAndComment.transform(yamlContent);
+
+            // 4. GitHub에 업로드 (덮어쓰기)
             // workflowName 와 ymlFileName 은 같은 의미이다.
             String filePath = ".github/workflows/" + request.getWorkflowName() + ".yml";
             githubApiClient.updateFile(
