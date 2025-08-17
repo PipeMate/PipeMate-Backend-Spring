@@ -38,6 +38,10 @@ public class GithubApiClient {
         this.objectMapper = new ObjectMapper();
     }
 
+    /**
+     * 지정된 소유자와 저장소의 GitHub Actions 워크플로우 리스트를 조회한다.
+     * 각 워크플로우의 YAML 파일을 가져와서 수동 실행 가능 여부와 사용 가능한 브랜치 정보도 함께 파싱한다.
+     */
     public WorkflowListResponse fetchWorkflowList(String owner, String repo, String token) {
         String listUrl = "https://api.github.com/repos/" + owner + "/" + repo + "/actions/workflows";
 
@@ -105,6 +109,9 @@ public class GithubApiClient {
         return new ArrayList<>();
     }
 
+    /**
+     * 특정 워크플로우의 상세 정보를 GitHub API를 통해 조회한다.
+     */
     public WorkflowDetailResponse fetchWorkflowDetail(String owner, String repo, String workflowId, String token) {
         String url = "https://api.github.com/repos/" + owner + "/" + repo + "/actions/workflows/" + workflowId;
 
@@ -121,6 +128,9 @@ public class GithubApiClient {
         return response.getBody();
     }
 
+    /**
+     * 특정 저장소에서 실행된 워크플로우 실행 목록을 조회한다.
+     */
     public WorkflowRunListResponse fetchWorkflowRuns(String owner, String repo, String token) {
         String url = "https://api.github.com/repos/" + owner + "/" + repo + "/actions/runs";
 
@@ -137,6 +147,9 @@ public class GithubApiClient {
         return response.getBody();
     }
 
+    /**
+     * 특정 워크플로우 실행(run) 상세 정보를 조회한다.
+     */
     public WorkflowRunResponse fetchWorkflowRun(String owner, String repo, Long runId, String token) {
         String url = "https://api.github.com/repos/" + owner + "/" + repo + "/actions/runs/" + runId;
 
@@ -153,6 +166,9 @@ public class GithubApiClient {
         return response.getBody();
     }
 
+    /**
+     * 특정 워크플로우 실행 로그를 다운로드 받고, ZIP 압축 해제 후 텍스트로 반환한다.
+     */
     public String downloadAndExtractLogs(String owner, String repo, Long runId, String token) {
         try {
             // 1. GitHub 로그 API URL
@@ -194,6 +210,9 @@ public class GithubApiClient {
         }
     }
 
+    /**
+     * ZIP 파일 압축 해제 유틸리티 메서드.
+     */
     private void unzip(String zipFilePath, String destDir) throws IOException {
         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFilePath))) {
             ZipEntry entry;
@@ -205,6 +224,9 @@ public class GithubApiClient {
         }
     }
 
+    /**
+     * 특정 워크플로우 실행의 하위 Job 리스트를 조회한다.
+     */
     public List<GithubJobDetailResponse> fetchWorkflowJobs(String owner, String repo, Long runId, String token) {
         String url = "https://api.github.com/repos/" + owner + "/" + repo + "/actions/runs/" + runId + "/jobs";
 
@@ -226,6 +248,9 @@ public class GithubApiClient {
         return jobDetails;
     }
 
+    /**
+     * 특정 워크플로우의 Job 상세 정보를 조회한다.
+     */
     public GithubJobDetailResponse fetchWorkflowJobDetail(String owner, String repo, Long jobId, String token) {
         String url = "https://api.github.com/repos/" + owner + "/" + repo + "/actions/jobs/" + jobId;
 
@@ -241,6 +266,10 @@ public class GithubApiClient {
         return GithubJobDetailResponse.from(jobNode);
     }
 
+    /**
+     * GitHub 저장소에 새 파일을 생성한다.
+     * 동일 경로에 이미 파일이 존재하면 예외 발생.
+     */
     public void createFile(String owner, String repo, String path, String content, String message, String token) {
         try {
             String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, path);
@@ -276,6 +305,10 @@ public class GithubApiClient {
         }
     }
 
+    /**
+     * GitHub 저장소의 파일을 업데이트한다.
+     * 업데이트 시 기존 파일의 SHA 값이 반드시 필요.
+     */
     public void updateFile(String owner, String repo, String path, String content, String message, String token) {
         try {
             String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, path);
@@ -313,6 +346,10 @@ public class GithubApiClient {
         }
     }
 
+    /**
+     * GitHub 저장소에서 파일을 삭제한다.
+     * 삭제 시 commit 메시지와 파일의 SHA가 필요.
+     */
     public void deleteFile(String owner, String repo, String path, String message, String token) {
         try {
             // 1. 삭제할 파일의 SHA 가져오기
@@ -354,6 +391,10 @@ public class GithubApiClient {
         }
     }
 
+    /**
+     * 특정 파일의 내용을 Base64 디코딩하여 반환한다.
+     * (GitHub Contents API)
+     */
     public String getFileContent(String owner, String repo, String path, String token) {
         try {
             String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, path);
@@ -383,6 +424,9 @@ public class GithubApiClient {
         }
     }
 
+    /**
+     * 파일 존재 여부 확인 (Contents API)
+     */
     public boolean fileExists(String owner, String repo, String path, String token) {
         try {
             String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, path);
@@ -406,6 +450,9 @@ public class GithubApiClient {
         }
     }
 
+    /**
+     * 파일의 SHA 값 반환
+     */
     public String getFileSha(String owner, String repo, String path, String token) {
         try {
             String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, path);
@@ -435,6 +482,9 @@ public class GithubApiClient {
         }
     }
 
+    /**
+     * 워크플로우 수동 실행(dispatch)
+     */
     public void dispatchWorkflow(String owner, String repo, String ymlFileName, String ref, String token) {
         String url = "https://api.github.com/repos/" + owner + "/" + repo + "/actions/workflows/" + ymlFileName + "/dispatches";
 
@@ -451,6 +501,9 @@ public class GithubApiClient {
         restTemplate.postForEntity(url, entity, Void.class);
     }
 
+    /**
+     * 워크플로우 실행 취소
+     */
     public void cancelWorkflowRun(String owner, String repo, Long runId, String token) {
         String url = String.format("https://api.github.com/repos/%s/%s/actions/runs/%d/cancel", owner, repo, runId);
 

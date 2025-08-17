@@ -25,6 +25,9 @@ public class GitHubSecretsService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    /**
+     * 지정한 저장소의 시크릿 목록을 조회한다.
+     */
     public GithubSecretListResponse getRepositorySecrets(String owner, String repo, String token) {
         String url = String.format("https://api.github.com/repos/%s/%s/actions/secrets", owner, repo);
 
@@ -45,6 +48,10 @@ public class GitHubSecretsService {
         return response.getBody();
     }
 
+    /**
+     * 저장소의 시크릿을 도메인별로 그룹화하여 조회한다.
+     * (예: 'PAYMENT_KEY', 'PAYMENT_SECRET' → PAYMENT 그룹)
+     */
     @Cacheable("secret-key-list")
     public GroupedGithubSecretListResponse getGroupedRepositorySecrets(String owner, String repo, String token) {
         log.info("[GitHubSecretsController] 레포지토리의 도메인별 시크릿 목록 조회");
@@ -65,6 +72,10 @@ public class GitHubSecretsService {
         return response;
     }
 
+    /**
+     * 저장소에 시크릿을 생성하거나 업데이트한다.
+     * GitHub API에서 요구하는 공개키를 이용해 값 암호화 후 저장.
+     */
     @CacheEvict(value = "secret-key-list", allEntries = true)
     public void createOrUpdateSecret(String owner, String repo, String secretName, GithubSecretRequest request, String token) {
         // 1. 공개키 조회
@@ -109,6 +120,9 @@ public class GitHubSecretsService {
         }
     }
 
+    /**
+     * GitHub 저장소의 시크릿 암호화를 위한 Public Key를 조회한다.
+     */
     @Cacheable("repo-public-key") // 깃허브 레포지토리 퍼블릭 키 캐싱 적용
     public GithubPublicKeyResponse getPublicKey(String owner, String repo, String token) {
         String url = String.format("https://api.github.com/repos/%s/%s/actions/secrets/public-key", owner, repo);
@@ -130,7 +144,10 @@ public class GitHubSecretsService {
         return response.getBody();
     }
 
-
+    /**
+     * 공개키를 사용해 시크릿 값을 암호화한다.
+     * GitHub API는 libsodium의 sealed box 암호화 방식을 사용한다.
+     */
     public String encryptSecret(String plainText, String base64PublicKey) {
         LazySodiumJava lazySodium = new LazySodiumJava(new SodiumJava());
 
@@ -147,7 +164,9 @@ public class GitHubSecretsService {
         return Base64.getEncoder().encodeToString(cipherBytes);
     }
 
-
+    /**
+     * 저장소의 시크릿을 삭제한다.
+     */
     @CacheEvict(value = "secret-key-list", allEntries = true)
     public void deleteSecret(String owner, String repo, String secretName, String token) {
         String url = String.format("https://api.github.com/repos/%s/%s/actions/secrets/%s", owner, repo, secretName);

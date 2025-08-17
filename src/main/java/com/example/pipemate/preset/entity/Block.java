@@ -11,7 +11,9 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "block")
 @Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @EqualsAndHashCode(of = "id")
 public class Block {
 
@@ -19,7 +21,6 @@ public class Block {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** 예: "trigger" | "job" | "step" */
     @Column(nullable = false)
     private String type;
 
@@ -28,10 +29,6 @@ public class Block {
 
     private String description;
 
-    /**
-     * ❗ 기존 필드 유지 (하위호환)
-     * 생성 시 기본 NULL, 실제 파이프라인 jobName은 pipeline_block.jobName에서 관리
-     */
     @Builder.Default
     private String jobName = null;
 
