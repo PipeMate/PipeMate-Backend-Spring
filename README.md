@@ -69,7 +69,7 @@
 | POST | **`/workflows/dispatch`** | 워크플로우 수동 실행 |
 | POST | **`/workflow-run/cancel`** | 실행 취소 |
 
-## **🔹 GitHub Secrets `/api/github/repos/secrets`**
+### **🔹 GitHub Secrets `/api/github/repos/secrets`**
 
 | **Method** | **Endpoint** | **설명** |
 | --- | --- | --- |

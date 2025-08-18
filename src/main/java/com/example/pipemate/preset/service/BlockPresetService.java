@@ -5,6 +5,7 @@ import com.example.pipemate.preset.res.BlockResponse;
 import com.example.pipemate.preset.res.JobBlockResponse;
 import com.example.pipemate.preset.res.StepBlockResponse;
 import com.example.pipemate.preset.res.TriggerBlockResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,15 +14,19 @@ import java.util.List;
 public class BlockPresetService {
 
     private final BlockRepository blockRepository;
+    private final ObjectMapper objectMapper;
 
-    public BlockPresetService(BlockRepository blockRepository) {
+    public BlockPresetService(BlockRepository blockRepository, ObjectMapper objectMapper) {
         this.blockRepository = blockRepository;
+        this.objectMapper = objectMapper;
     }
 
     public List<BlockResponse> getAllBlocks() {
         return blockRepository.findAll().stream()
                 .map(block -> {
                     String type = block.getType();
+                    String raw = block.getConfigRawForView(objectMapper);
+
                     switch (type) {
                         case "trigger":
                             return TriggerBlockResponse.builder()
@@ -29,7 +34,7 @@ public class BlockPresetService {
                                     .name(block.getName())
                                     .type(type)
                                     .description(block.getDescription())
-                                    .config(block.getConfig())
+                                    .config(raw)
                                     .build();
 
                         case "job":
@@ -38,7 +43,7 @@ public class BlockPresetService {
                                     .name(block.getName())
                                     .type(type)
                                     .description(block.getDescription())
-                                    .config(block.getConfig())
+                                    .config(raw)
                                     .jobName(block.getJobName())
                                     .build();
 
@@ -48,7 +53,7 @@ public class BlockPresetService {
                                     .name(block.getName())
                                     .type(type)
                                     .description(block.getDescription())
-                                    .config(block.getConfig())
+                                    .config(raw)
                                     .domain(block.getDomain())
                                     .task(block.getTask())
                                     .build();
